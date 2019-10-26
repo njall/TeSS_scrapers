@@ -1,4 +1,5 @@
-class NuffieldScraper < Tess::Scrapers::Scraper
+
+class BigDataInstituteScraper < Tess::Scrapers::Scraper
   # This provider has an RSS feed, an iCal, and also uses bits of RDFa. However, neither method gives all information
   # about events we need. iCal does not contain link to the event nor location. RSS feed does not contain end date,
   # and location. Structured data is also patchy, not implemented properly and also missing a few event properties. For
@@ -9,16 +10,16 @@ class NuffieldScraper < Tess::Scrapers::Scraper
   # snippets from JSON, putting them into a dummy HTML document and then parsing the document to extract the data we
   # need.
 
-  # Essentially the same as Big Data Institute (BDI) scraper - even the events are the same.
-def self.config
+  # Essentially the same as Nuffield Department for Population Health scraper - even the events are the same.
+  def self.config
     {
-        name: "Nuffield Department for Population Health Scraper",
-        root_url: "https://www.ndph.ox.ac.uk",
+        name: "Big Data Institute Scraper",
+        root_url: "https://www.bdi.ox.ac.uk",
         forthcoming_events_path: "/events?tab=forthcoming&format=json",
         past_events_path: "/events?tab=past&format=json",
         pagination_variable: "b_start:int",
         pagination_increment: 20,
-        # address: "Richard Doll Building, University of Oxford",
+        # address: "Li Ka Shing Centre for Health Information and Discovery, Old Road Campus",
         # city: "Oxford",
         # country: "United Kingdom",
         # postcode: "OX3 7LF",
@@ -31,10 +32,10 @@ def self.config
   # event details)
   def scrape
     cp = add_content_provider(Tess::API::ContentProvider.new(
-        {title: "Nuffield Department for Population Health",
+        {title: "Big Data Institute",
          url: config[:root_url],
-         image_url: "https://www.ndph.ox.ac.uk/images/site-logos/primary-logo",
-         description: "Nuffield Department for Population Health undertakes research and trains scientists to seek answers to some of the most important questions about the causes, prevention and treatment of disease to reduce disability and premature death in both the developed and developing worlds.",
+         image_url: "https://www.bdi.ox.ac.uk/images/site-logos/oxford-logo",
+         description: "The Big Data Institute (BDI) is an interdisciplinary research institute that focuses on the analysis of large, complex, heterogeneous data sets for research into the causes and consequences, prevention and treatment of disease. The BDI is part of the Li Ka Shing Centre for Health Information and Discovery at the University of Oxford's Old Road Campus.",
          content_provider_type: :organisation,
          keywords: ["HDRUK"]
         }))
@@ -67,7 +68,7 @@ def self.config
            start: event_start_date,
            end: event_end_date,
            description: event_description,
-           organizer: 'Nuffield Department for Population Health',
+           organizer: 'Big Data Institute',
            venue: event_venue,
            country: 'United Kingdom',
            event_types: [:workshops_and_courses], # these are actually seminars - we'd need a new category
@@ -111,5 +112,5 @@ def self.config
     html_chunk = html_chunk.gsub('\\"', '"') # Replace escaped quotes with just a quote character
     return html_chunk
   end
-  
+
 end
