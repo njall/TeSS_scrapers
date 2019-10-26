@@ -34,7 +34,20 @@ class BartsScraper < Tess::Scrapers::Scraper
             event[:end]         = ical_event.dtend.to_datetime unless ical_event.dtend.blank?
             event[:title]       = ical_event.summary.try(:to_s).try(:strip)
             event[:description] = ical_event.description.try(:to_s).try(:strip)
-            event[:venue]       = ical_event.location.try(:to_s).try(:strip)
+            loc = ical_event.location.try(:to_s).try(:strip)
+            # Try and hack the address out
+            if loc
+              parts = loc.split(',')
+              postcode_index = parts.index { |part| part.strip.match?(/^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/) }
+              if postcode_index
+                event[:country] = 'United Kingdom' # Nowhere else uses postcodes
+                event[:postcode] = parts[postcode_index].strip
+                event[:city] = parts[postcode_index - 1].strip if parts[postcode_index - 1]
+                event[:venue] = parts[0..postcode_index - 2].join(', ').strip if parts[postcode_index - 2]
+              else
+                event[:venue] = loc
+              end
+            end
             event[:latitude]    = ical_event.geo.first.to_f unless ical_event.geo.blank?
             event[:longitude]   = ical_event.geo.last.to_f unless ical_event.geo.blank?
             event[:url]         = ical_event.url.try(:to_s)

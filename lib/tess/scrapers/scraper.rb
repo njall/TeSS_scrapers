@@ -9,10 +9,10 @@ module Tess
 
       def initialize(output_file: nil, debug: false, verbose: false, offline: false, cache: false)
         @output_file = output_file
-        @debug = debug || Tess::API.debug?
+        @debug = debug || Tess::API.debug? # Don't actually POST anything to TeSS, just show what was scraped
         @verbose = verbose
-        @offline = offline
-        @cache = cache
+        @offline = offline # Use offline cache when opening URLs?
+        @cache = cache # Cache opened URLs
         @scraped = { content_providers: [], events: [], materials: [] }
       end
 
@@ -78,30 +78,27 @@ module Tess
         if offline
           if config[:offline_url_mapping].key?(url)
             puts "... using local file: #{config[:offline_url_mapping][url]}" if verbose
-            File.open(config[:offline_url_mapping][url])
+            return File.open(config[:offline_url_mapping][url])
           elsif (cache_path = cache_file_path(Digest::SHA1.hexdigest(url))) && File.exists?(cache_path)
             puts "... using cache: #{cache_path}" if verbose
-            File.open(cache_path)
-          else
-            puts "... skipping! No offline file or cache entry found" if verbose
+            return File.open(cache_path)
           end
-        else
-          puts "... from remote location" if verbose
-          options = { redirect: false } # We're doing redirects manually below, since open-uri can't handle http -> https redirection
-          options[:ssl_verify_mode] = config[:ssl_verify_mode] if config.key?(:ssl_verify_mode)
-          begin
-            redirect_attempts = 5
-            open(url, options).tap do |f|
-              cache_file(url, f) if cache
-              f.rewind
-            end
-          rescue OpenURI::HTTPRedirect => e
-            url = e.uri.to_s
-            retry if (redirect_attempts -= 1) > 0
-            raise e
-          rescue OpenURI::HTTPError => e
-            puts("Error for URL #{url}: #{e}")
+        end
+        puts "... from remote location" if verbose
+        options = { redirect: false } # We're doing redirects manually below, since open-uri can't handle http -> https redirection
+        options[:ssl_verify_mode] = config[:ssl_verify_mode] if config.key?(:ssl_verify_mode)
+        begin
+          redirect_attempts = 5
+          open(url, options).tap do |f|
+            cache_file(url, f) if cache
+            f.rewind
           end
+        rescue OpenURI::HTTPRedirect => e
+          url = e.uri.to_s
+          retry if (redirect_attempts -= 1) > 0
+          raise e
+        rescue OpenURI::HTTPError => e
+          puts("Error for URL #{url}: #{e}")
         end
       end
 
