@@ -3,9 +3,15 @@ require 'net/smtp'
 
 log = 'log/scrapers.log' # The log file for this script, just mentions which scrapers are run.
 output = 'log/scrapers.out' # The log file for scraper output. Says how many events etc. were scraped. Need to logrotate this, will be big!
-email = ARGV[0] != 'no_email' rescue true
+email = false #ARGV[0] != 'no_email' rescue true
 
 scrapers = [
+    UclScraper,
+    NuffieldScraper,
+    OxfordTalksScraper
+]
+
+other_scrapers = [
    BabrahamScraper,
    BiocompRdfaScraper,
    BioconductorScraper,
